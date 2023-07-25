@@ -116,7 +116,7 @@ class Question(models.Model):
            return False
     
     def __str__(self):
-        return "Question:" + self.question +" Grade: "+self.grade
+        return "Question:" + self.question_text +" Grade: "+str(self.grade_point)
 
 
 #  <HINT> Create a Choice Model with:
@@ -139,7 +139,7 @@ class Choice(models.Model):
 # One choice could belong to multiple submissions
 class Submission(models.Model):
    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
-   chocies = models.ManyToManyField(Choice)
+   choices = models.ManyToManyField(Choice)
 #    Other fields and methods you would like to design
 
   

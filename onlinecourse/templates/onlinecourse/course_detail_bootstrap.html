@@ -61,7 +61,7 @@
                   <div class="card-header" id="headingOne">
                     <h5 class="mb-0">
                       <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                        Collapsible Group Item #1
+                       Exam Questions
                       </button>
                     </h5>
                   </div>
@@ -69,13 +69,14 @@
                   <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
                     <div class="card-body">
                     <div>
-                        <form id="questionform" action="point to a submit view" method="post">
-                            {% for question in questions %}
+                        <form id="questionform" action="{% url 'onlinecourse:submit' course_id=course.id %}" method="post">
+                            {% for question in course.question_set.all %}
+                            {% csrf_token %}
                             <div class="card mt-1">
                                 <div class="card-header"><h5>{{ question.question_text}}</h5></div>
                                 {% csrf_token %}
                                 <div class="form-group">
-                                   {% for choice in choices %}
+                                   {% for choice in question.choice_set.all %}
                                     <div class="form-check">
                                         <label class="form-check-label">
                                             <input type="checkbox" name="choice_{{choice.id}}"
@@ -86,9 +87,10 @@
                                     {% endfor %}
                                 </div>
                             </div>
+                            {% endfor %}
                         <input class="btn btn-success btn-block" type="submit" value="Submit">
                 </form> 
-                {% endfor %}
+               
                     </div>
                     </div>
                   </div>

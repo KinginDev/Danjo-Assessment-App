@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 # <HINT> Import any new Models here
-from .models import Course, Enrollment
+from .models import Course, Enrollment, Question, Choice, Submission
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
@@ -110,8 +110,36 @@ def enroll(request, course_id):
          # Collect the selected choices from exam form
          # Add each selected choice object to the submission object
          # Redirect to show_exam_result with the submission id
-#def submit(request, course_id):
+def submit(request, course_id):
+     context = {}
+     if request.method == "POST":
+        user = request.user
+        course = Course.objects.get(pk=course_id)
 
+        enrollment = Enrollment.objects.get(user=user, course=course)
+
+        # Initialize an empty list to store the selected choice IDs
+        choice_ids = []
+
+        # Iterate over the keys in request.POST to find the selected choices
+        for key in request.POST:
+            # Check if the key starts with "choice_" to identify the checkboxes
+            if key.startswith('choice_'):
+                # Extract the choice ID from the key and add it to the choice_ids list
+                choice_id = int(key.split('_')[1])  # Extract the ID from the key
+                choice_ids.append(choice_id)
+
+        # Create the submission instance
+        submission = Submission.objects.create(enrollment=enrollment)
+
+        # Use .set() to add the selected choices to the submission
+        submission.choices.set(choice_ids)
+
+        # Use reverse to get the URL name and pass the kwargs as arguments
+        return redirect(reverse('onlinecourse:exam_result', kwargs={'course_id': course_id, 'submission_id': submission.pk}),context)
+
+
+    
 
 # <HINT> A example method to collect the selected choices from the exam form from the request object
 #def extract_answers(request):
@@ -130,7 +158,53 @@ def enroll(request, course_id):
         # Get the selected choice ids from the submission record
         # For each selected choice, check if it is a correct answer or not
         # Calculate the total score
-#def show_exam_result(request, course_id, submission_id):
+def show_exam_result(request, course_id, submission_id):
+    if request.method == 'GET':
+        user = request.user
+        # Step 1: Get the course and submission objects based on their ids
+        course = get_object_or_404(Course, pk=course_id)
+        submission = get_object_or_404(Submission, pk=submission_id)
 
+        selected_choice_ids = submission.choices.all()  # Get the selected choice IDs from the submission
+
+        # Create a dictionary to store the correctness and color information for each choice
+        choice_status = {}
+
+        # Calculate the total score by adding up the grades for all questions in the course
+        total_score = 0
+
+        for question in course.question_set.all():
+            correct_choice_ids = question.choice_set.filter(is_correct=True).values_list('id', flat=True)
+
+            for choice in question.choice_set.all():
+                choice_status[choice.id] = {
+                    'text': choice.choice_text,
+                    'is_correct': choice.id in correct_choice_ids,
+                    'selected': choice.id in selected_choice_ids,
+                }
+
+                if choice.id in selected_choice_ids and choice.id in correct_choice_ids:
+                    # If the choice is selected and correct, mark it as green
+                    choice_status[choice.id]['color'] = 'green'
+                    total_score += question.grade
+
+                elif choice.id in selected_choice_ids and choice.id not in correct_choice_ids:
+                    # If the choice is selected but not correct, mark it as red
+                    choice_status[choice.id]['color'] = 'red'
+
+                else:
+                    # If the choice is not chosen, mark it as yellow
+                    choice_status[choice.id]['color'] = 'yellow'
+
+        context = {
+            'course': course,
+            'selected_ids': selected_choice_ids,
+            'choice_status': choice_status,
+            'total_score': total_score,
+        }
+
+
+
+        return render(request,'onlinecourse/exam_result_bootstrap.html', context)
 
 

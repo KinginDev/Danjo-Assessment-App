@@ -1,3 +1,4 @@
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,16 +40,45 @@
     {% if grade > 80 %}
     <div class="alert alert-success">
        <!--HINT Display passed info -->
+       <div class="alert alter-danger">
+           <strong>Failed</strong> Sorry {{reques.user }} You failed exam with score 99/100"
+       </div>
     </div>
         {% else %}
         <div class="alert alert-danger">
             <!--HINT Display failed info -->
+            <div class="alert alter-success">
+                <strong>Congratultions</strong> {{request.user }} ,You passed exam with score 99/100"
+            </div>
         </div>
         <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course.id %}">Re-test</a>
         {% endif %}
         <div class="card-columns-vertical mt-1">
         <h5 class="">Exam results</h5>
-            <!--HINT Display exam results-->
+        <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+            <div class="card-body">
+            <div>
+                <form id="questionform" action="{% url 'onlinecourse:submit' course_id=course.id %}" method="post">
+                    {% for question in course.question_set.all %}
+                    <p>{{ question.question_text }}</p>
+                    {% for choice in question.choice_set.all %}
+    <div class="form-check">
+        <label class="form-check-label " for="{{ choice.id }}">
+            <input type="checkbox" name="choice_{{ choice.id }}"
+                   class="form-check-input" id="{{ choice.id }}"
+                  
+                   >
+            {{ choice.choice_text }}
+        </label>
+    </div>
+{% endfor %}
+                {% endfor %}
+               
+        </form> 
+       
+            </div>
+            </div>
+          </div>
         </div>
     </div>
 </body>
