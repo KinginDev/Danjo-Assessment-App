@@ -161,47 +161,25 @@ def extract_answers(request):
 def show_exam_result(request, course_id, submission_id):
     if request.method == 'GET':
         user = request.user
-        # Step 1: Get the course and submission objects based on their ids
         course = get_object_or_404(Course, pk=course_id)
-        submission = get_object_or_404(Submission, pk=submission_id)
-
-        selected_choice_ids = submission.choices.all()  # Get the selected choice IDs from the submission
-
-        # Create a dictionary to store the correctness and color information for each choice
-        choice_status = {}
-
-        # Calculate the total score by adding up the grades for all questions in the course
+        submission = Submission.objects.get(id=submission_id)
+        choices = submission.choices.all()
+        # totChoice = get_object_or_404(Choice, pk=choi)
         total_score = 0
+        total_choices=0
+        for choice in choices:
+            if choice.is_correct:
+                total_score += choice.question_id.grade
+            total_choices=total_choices+1    
+        
+        try:
+            user_score = round((total_score / total_choices) * 100)
+        except:
+            user_score = 0
 
-        for question in course.question_set.all():
-            correct_choice_ids = question.choice_set.filter(is_correct=True).values_list('id', flat=True)
-
-            for choice in question.choice_set.all():
-                choice_status[choice.id] = {
-                    'text': choice.choice_text,
-                    'is_correct': choice.id in correct_choice_ids,
-                    'selected': choice.id in selected_choice_ids,
-                }
-
-                if choice.id in selected_choice_ids and choice.id in correct_choice_ids:
-                    # If the choice is selected and correct, mark it as green
-                    choice_status[choice.id]['color'] = 'green'
-                    total_score += question.grade
-
-                elif choice.id in selected_choice_ids and choice.id not in correct_choice_ids:
-                    # If the choice is selected but not correct, mark it as red
-                    choice_status[choice.id]['color'] = 'red'
-
-                else:
-                    # If the choice is not chosen, mark it as yellow
-                    choice_status[choice.id]['color'] = 'yellow'
-
-        context = {
-            'course': course,
-            'selected_ids': selected_choice_ids,
-            'choice_status': choice_status,
-            'total_score': total_score,
-        }
+        context['course'] = course
+        context['grade'] = user_score
+        context['choices'] = choices
 
 
 
