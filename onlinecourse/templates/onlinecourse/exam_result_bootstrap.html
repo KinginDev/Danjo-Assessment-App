@@ -63,13 +63,15 @@
                     <p>{{ question.question_text }}</p>
                     {% for choice in question.choice_set.all %}
     <div class="form-check">
-        <label class="form-check-label " for="{{ choice.id }}">
-            <input type="checkbox" name="choice_{{ choice.id }}"
-                   class="form-check-input" id="{{ choice.id }}"
-                  
-                   >
-            {{ choice.choice_text }}
-        </label>
+        {% if choice.id in selected %}
+                                {% if choice.is_correct == True %}
+                                    <label style="color:#2ea94a;font-weight:bold">Correct answer: {{choice.choice_text}}</label>
+                                {% else %}
+                                    <label style="color:red;font-weight:bold">Wrong answer: {{choice.choice_text}}</label>
+                                {% endif %}
+                            {% else %}
+                                <label>{{choice.choice_text}}</label>
+                            {% endif %}
     </div>
 {% endfor %}
                 {% endfor %}
